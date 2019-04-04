@@ -1,0 +1,21 @@
+{
+  "name": "tamogotchi-arduino",
+  "version": "1.0.0",
+  "description": "Final project for ATLS 3300",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/brookestevens/tamogotchi-arduino.git"
+  },
+  "author": "Brooke and Kathy",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/brookestevens/tamogotchi-arduino/issues"
+  },
+  "homepage": "https://github.com/brookestevens/tamogotchi-arduino#readme",
+  "dependencies": {}
+}
