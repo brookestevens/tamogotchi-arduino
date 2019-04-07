@@ -17,5 +17,8 @@
     "url": "https://github.com/brookestevens/tamogotchi-arduino/issues"
   },
   "homepage": "https://github.com/brookestevens/tamogotchi-arduino#readme",
-  "dependencies": {}
+  "dependencies": {
+    "express": "^4.16.4",
+    "pg-promise": "^8.6.4"
+  }
 }

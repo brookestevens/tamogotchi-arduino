@@ -1,50 +1,70 @@
-// HTTP Portion
-var http = require('http');
-// Path module
+/////////////////////////////////////////////////
+//
+//  Express - define the routes
+//  pg-promise - make database calls
+//  Running on port 8080 so the p5 serial port can connect to it
+//
+////////////////////////////////////////////////
+
+var express = require('express');
+var app = express();
 var path = require('path');
+var pgp = require('pg-promise')();
+const port = 8000;  //p5 serial listens on this port
 
-// Using the filesystem module
-var fs = require('fs');
+const dbConfig = {
+	host: 'localhost',
+	port: 5432,
+	database: 'tamogotchi', //DB name here
+	user: 'brookestevens', //Username here
+	password: 'postgres' //Password
+};
 
-var server = http.createServer(handleRequest);
-server.listen(8080);
+var db = pgp(dbConfig);
 
-console.log('Server started on port 8080');
+//set up a route to serve up the html/JS pages
+app.get('/', (req,res) => {
+    res.sendFile(path.join(__dirname,'public/index.html'));
+});
+app.get('/index.js', (req,res) => {
+  res.sendFile(path.join(__dirname,'public/index.js'));
+});
 
-function handleRequest(req, res) {
-  // What did we request?
-  var pathname = req.url;
-  
-  // If blank let's ask for index.html
-  if (pathname == '/') {
-    pathname = '/public/index.html';
-  }
-  
-  // Ok what's our file extension
-  var ext = path.extname(pathname);
+//set up the p5-serial-port library all user defined files
+app.get('/p5.serialport.js', (req,res) => {
+  res.sendFile(path.join(__dirname,'public/p5.serialport.js'));
+});
 
-  // Map extension to file type
-  var typeExt = {
-    '.html': 'text/html',
-    '.js':   'text/javascript',
-    '.css':  'text/css'
-  };
-  // What is it?  Default to plain text
+//Set up the routes to handle the stats of the tamogotchi
+app.get('/display', (req, res) => { 
+db.any('SELECT * FROM stats;')
+  .then( data => {
+    res.send({
+      info : data[0]
+    })
+  })
+  .catch(e => console.log(e))
+});
 
-  var contentType = typeExt[ext] || 'text/plain';
+//update our DB once people finish a game
+app.get('/update', (req, res) => {
+  var love = req.query.love;
+  var hygiene = req.query.hygiene;
+  var food = req.query.food;
 
-  // User file system module
-  fs.readFile(__dirname + pathname,
-    // Callback function for reading
-    function (err, data) {
-      // if there is an error
-      if (err) {
-        res.writeHead(500);
-        return res.end('Error loading ' + pathname);
-      }
-      // Otherwise, send the data, the contents of the file
-      res.writeHead(200,{ 'Content-Type': contentType });
-      res.end(data);
-    }
-  );
-}
+  db.task('get-everything', task => {
+    return task.batch([
+        task.any(`UPDATE stats SET food = ${food}, love = ${love}, hygiene = ${hygiene} WHERE id = 1;`),
+        task.any("SELECT * FROM stats;")
+    ]);
+  })
+    .then( data => {
+      res.send({
+        updated : data[0],
+        info : data[1]
+      })
+    })
+    .catch (e => console.log(e))
+})
+
+app.listen(port, () => console.log(`App is listening on port ${port}!`));
