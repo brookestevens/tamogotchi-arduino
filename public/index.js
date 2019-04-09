@@ -6,45 +6,29 @@
 
 //object to hold the DB response
 //maximum stats are 10 
-var stat = { food: 0, love: 0, hygiene: 0 };
+var stat = { food: "", love: "", hygiene: "", gameWasPlayed: false };
 var serial; //variable to hold an instance of the serial port library
 var portName = '/dev/cu.usbmodem14201'; //fill in with YOUR port
-var inData;
+var inData, outString;
 var clicked = true;
-
-
 
 //parse the data
 function serialEvent(){
-  //this is the same as readStringUntil("\r\n");
-  //return and newline
-  inData = serial.read();
-  console.log(inData);
-  if(inData == clicked){
-      //do something
-      var random = Math.floor(Math.random() * (60 - 1)) + 1;
-      console.log(random);
-      serial.write(random);
-      clicked = false;
+  inData = serial.readLine();
+  console.log("in data is: ", inData);
+  if( clicked === true && inData === '290068F8D069'){
+    clicked = false;
+    //redirect player
+    window.open('http://localhost:8000/feedMe.html','_self');
   }
+  //if (clicked == true && inData === "2B009F8D0D34")
 }
 
 
 //load in the stats before anything else gets rendered
-function preload(){
-    fetch('/display')
-    .then(res => res.json())
-    .then(function(res) {
-        stat.food = res.info.food;
-        stat.love = res.info.love;
-        stat.hygiene = res.info.hygiene;
-        console.log(JSON.stringify(res.info.food));
-    })
-    .then(res => {
-        //some p5 code here
-    })
-    .catch(res => console.log(res))
-}
+// function preload(){
+
+// }
 
 function setup(){
   createCanvas(windowWidth, windowHeight);
@@ -60,37 +44,55 @@ function setup(){
 
   //open our serial port
   serial.open(portName);
+
+
+  //update the DB
+  fetch('/display')
+  .then(res => res.json())
+  .then(function(res) {
+      stat.food = res.info.food;
+      stat.love = res.info.love;
+      stat.hygiene = res.info.hygiene;
+      stat.gameWasPlayed = res.info.gameplayed;
+      console.table(res.info);
+      outString = `${res.info.food}${res.info.love}${res.info.hygiene}`;
+
+      //send the LED values out to the Arduino
+      //console.log("string to send: ", outString);
+      serial.write(outString);
+  })
+  .catch(res => console.log(res))
+
 }
 
-function draw() {
-    textSize(32); //size
-    text(`Hunger: ${stat.food}`, 10, 30); //string and position
-    fill(150, 102, 153); //color of words
+//only for testing 
+function keyPressed() {
+  // Do something
+  if(key == 'q'){
+    console.log("pressed");
+    window.open('http://localhost:8000/feedMe.html', '_self'); //open window in same tab
+  }
+  return false; // prevent any default behaviour
+}
+
+function draw(){
+    square(10,10,10);
+    fill(120,12,123);
+    //data vis:
     textSize(32); //size
     text(`Affection: ${stat.love}`, 10, 60); //string and position
     fill(150, 102, 153); //color of words
     textSize(32); //size
     text(`Cleanliness: ${stat.hygiene}`, 10, 90); //string and position
     fill(150, 102, 153); //color of words
-    
-    square(150,150,500); //location of square 
-    fill(150,120,155); //color of square
-    square(800,150,500);
-    fill(150,120,155);
+    textSize(32); //size
+    text(`Hunger: ${stat.food}`, 10, 30); //string and position
+    fill(150, 102, 153); //color of word
 
-     clicked = true;
-
-    // switch(condition){
-    //     case 1 :
-    //         //activite first game
-    //         break;
-    //     case 2 :
-    //         //activate second game
-    //         break;
-    //     case 3 :
-    //         //activate 3rd game
-    //         break;
-    //     default:
-    //         //default code here
-    // } 
+    if(stat.love > 0 && stat.love < 2){
+      //display some animation
+    }
+    //do that for all animation combos
 }
+
+

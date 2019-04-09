@@ -35,9 +35,42 @@ app.get('/p5.serialport.js', (req,res) => {
   res.sendFile(path.join(__dirname,'public/p5.serialport.js'));
 });
 
+app.get('/p5.play.js', (req,res) => {
+  res.sendFile(path.join(__dirname,'/p5.play.js'));
+});
+
+//set up route for feeding the tamogotchi
+app.get('/feedMe.html', (req,res) => {
+  res.sendFile(path.join(__dirname,'games/test.html'));
+});
+
+app.get('/sketch.js', (req,res) => {
+  res.sendFile(path.join(__dirname,'games/sketch.js'));
+});
+
+//set up route for cleaning hte tamogotchi
+app.get('/test.html', (req,res) => {
+  res.sendFile(path.join(__dirname,'games/test.html'));
+});
+
+app.get('/sketch.js', (req,res) => {
+  res.sendFile(path.join(__dirname,'games/sketch.js'));
+});
+
+//set up route for giving tamogotchi affection
+app.get('/love.html', (req,res) => {
+  res.sendFile(path.join(__dirname,'games/test.html'));
+});
+
+app.get('/sketch.js', (req,res) => {
+  res.sendFile(path.join(__dirname,'games/sketch.js'));
+});
+
+
+
 //Set up the routes to handle the stats of the tamogotchi
 app.get('/display', (req, res) => { 
-db.any('SELECT * FROM stats;')
+db.any('SELECT * FROM stats WHERE id=2;')
   .then( data => {
     res.send({
       info : data[0]
@@ -48,23 +81,18 @@ db.any('SELECT * FROM stats;')
 
 //update our DB once people finish a game
 app.get('/update', (req, res) => {
-  var love = req.query.love;
-  var hygiene = req.query.hygiene;
-  var food = req.query.food;
+  var colName = req.query.column;
+  var newValue = req.query.value;
+  console.log(`UPDATE stats SET ${colName} = ${newValue} WHERE id=2;`);
+  //check if the stats are at a maximum
+  if(newValue > 8) newValue = 8;
 
   db.task('get-everything', task => {
     return task.batch([
-        task.any(`UPDATE stats SET food = ${food}, love = ${love}, hygiene = ${hygiene} WHERE id = 1;`),
-        task.any("SELECT * FROM stats;")
+        task.any(`UPDATE stats SET ${colName} = ${newValue} WHERE id=2;`) //no return from this query
     ]);
   })
-    .then( data => {
-      res.send({
-        updated : data[0],
-        info : data[1]
-      })
-    })
-    .catch (e => console.log(e))
+  res.send({"express": "success"}) //send this success message back
 })
 
 app.listen(port, () => console.log(`App is listening on port ${port}!`));
