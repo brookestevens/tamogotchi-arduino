@@ -8,7 +8,7 @@ Purpose: Create a tamogotchi web app that can interact with users through miniga
 <ul>
   <li> Arduino </li>
   <li> Node.js with Express </li>
-  <li> PostgreSQL  </li>
+  <li> PostgreSQL with pg-promise  </li>
   <li> P5.js  </li>
   <li> P5.serialport and P5.game libraries </li>
 </ul>
