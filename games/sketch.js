@@ -144,7 +144,7 @@
      gameOver();
    }
    //make sure this only makes 1 QUERY!!!! NO LOOPING -- will be true upon page reload/redirect
-   if(score >= 5){
+   if(score >= 7){
      if(flag == true) gameWin();
      flag = false;
   }
@@ -177,23 +177,6 @@
       .catch(e => console.log(e))
     }, 1500);
   }
-
-
-  // function keyPressed(){
-  //   if (keyCode === LEFT_ARROW){
-  //     //console.log('LEFT');
-  //     if (paddle.position.x >= 70){
-  //       paddle.position.x -= 50;
-  //     }
-  //   }
-  //   if (keyCode === RIGHT_ARROW){
-  //     //console.log('right');
-  //     if (paddle.position.x <= 430){
-  //       paddle.position.x += 50;
-  //     }
-  //   }
-  //   return false;
-  // }
 
 
   function brickHit(ball, brick) {

@@ -18,21 +18,45 @@ function serialEvent(){
   console.log("in data is: ", inData);
   if( clicked === true && inData === '290068F8D069'){
     clicked = false;
-    //redirect player
-    window.open('http://localhost:8000/feedMe.html','_self');
+    location.replace('http://localhost:8000/feedMe','_self');
   }
-  //if (clicked == true && inData === "2B009F8D0D34")
+  // if( clicked === true && inData === '---------------'){
+  //   clicked = false;
+  //   location.replace('http://localhost:8000/cleanMe','_self');
+  // }
+  // if( clicked === true && inData === '----------------'){
+  //   clicked = false;
+  //   window.open('http://localhost:8000/attention','_self');
+  // }
 }
 
+// set up the animations 
+var sequenceAnimation;
+var glitch;
+var expression;
+var fps;
 
-//load in the stats before anything else gets rendered
-// function preload(){
-
-// }
+function preload() {
+  angry = loadAnimation("assets/angry-1.png", "assets/angry-2.png");
+  bashful = loadAnimation("assets/bashful-1.png", "assets/bashful-2.png");
+  cry = loadAnimation("assets/cry-1.png", "assets/cry-2.png");
+  idle = loadAnimation("assets/idle-1.png", "assets/idle-2.png");
+  disappointed = loadAnimation("assets/disappointed-1.png", "assets/disappointed-2.png");
+  shiver = loadAnimation("assets/shiver-1.png", "assets/shiver-2.png");
+  sick = loadAnimation("assets/sick-1.png", "assets/sick-2.png");
+  dead = loadAnimation("assets/dead-1.png", "assets/dead-2.png");
+  pout = loadAnimation("assets/pout-1.png", "assets/pout-2.png");
+  nightmare = loadAnimation("assets/nightmare-1.png", "assets/nightmare-2.png");
+  lick = loadAnimation("assets/lick-1.png", "assets/lick-2.png");
+  bath = loadAnimation("assets/bath-1.png", "assets/bath-2.png");
+  wave = loadAnimation("assets/wave-1.png", "assets/wave-2.png", "assets/wave-3.png");
+  happywalk = loadAnimation("assets/happy-walk-1.png", "assets/happy-walk-2.png", "assets/happy-walk-3.png");
+  
+}
 
 function setup(){
   createCanvas(windowWidth, windowHeight);
-  background(0);
+  background('#BAE1FF'); //powder blue
   serial = new p5.SerialPort(); //a new instance of serial port library
 
   //set up events for serial communication / debuggging information
@@ -65,20 +89,11 @@ function setup(){
 
 }
 
-//only for testing 
-function keyPressed() {
-  // Do something
-  if(key == 'q'){
-    console.log("pressed");
-    window.open('http://localhost:8000/feedMe.html', '_self'); //open window in same tab
-  }
-  return false; // prevent any default behaviour
-}
 
 function draw(){
-    square(10,10,10);
-    fill(120,12,123);
-    //data vis:
+    background('#BAE1FF'); //powder blue
+    rect(20,20,400,400,20);
+    //STATS:
     textSize(32); //size
     text(`Affection: ${stat.love}`, 10, 60); //string and position
     fill(150, 102, 153); //color of words
@@ -88,11 +103,40 @@ function draw(){
     textSize(32); //size
     text(`Hunger: ${stat.food}`, 10, 30); //string and position
     fill(150, 102, 153); //color of word
-
-    if(stat.love > 0 && stat.love < 2){
-      //display some animation
-    }
-    //do that for all animation combos
+    text(`Mimitchi`, 300, 30); //string and position
+    fill(150, 102, 153); //color of word
+  
+    translate(50, 100);
+    getAnimation();
 }
+
+
+function animate(expression, frames){
+  fps = frames;
+  animation(expression, 150, 150);
+  expression.frameDelay = 60/fps;
+}
+
+function getAnimation(){
+  var totals = +stat.love + +stat.food + +stat.hygiene;
+  if(stat.food <= 4){
+    animate(angry, 1);
+  }
+  else if(stat.love <= 4){
+    animate(pout,1);
+  }
+  else if(stat.hygiene <= 4){
+    animate(bath, 1);
+  }
+  else if(totals === 0) {
+    animate(dead, 1);
+  }
+  else if(totals === 24){
+    animate(lick, 1);
+  }
+}
+
+
+
 
 

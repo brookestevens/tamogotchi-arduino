@@ -22,51 +22,28 @@ const dbConfig = {
 
 var db = pgp(dbConfig);
 
-//set up a route to serve up the html/JS pages
-app.get('/', (req,res) => {
-    res.sendFile(path.join(__dirname,'public/index.html'));
-});
-app.get('/index.js', (req,res) => {
-  res.sendFile(path.join(__dirname,'public/index.js'));
-});
-
-//set up the p5-serial-port library all user defined files
-app.get('/p5.serialport.js', (req,res) => {
-  res.sendFile(path.join(__dirname,'public/p5.serialport.js'));
-});
+//Serve up the directories
+app.use(express.static(__dirname + '/public'));
+app.use('/games', express.static(__dirname + '/games'));
 
 app.get('/p5.play.js', (req,res) => {
   res.sendFile(path.join(__dirname,'/p5.play.js'));
 });
 
 //set up route for feeding the tamogotchi
-app.get('/feedMe.html', (req,res) => {
+app.get('/feedMe', (req,res) => {
   res.sendFile(path.join(__dirname,'games/test.html'));
 });
 
-app.get('/sketch.js', (req,res) => {
-  res.sendFile(path.join(__dirname,'games/sketch.js'));
-});
-
-//set up route for cleaning hte tamogotchi
-app.get('/test.html', (req,res) => {
-  res.sendFile(path.join(__dirname,'games/test.html'));
-});
-
-app.get('/sketch.js', (req,res) => {
-  res.sendFile(path.join(__dirname,'games/sketch.js'));
+//set up route for cleaning the tamogotchi
+app.get('/cleanMe', (req,res) => {
+  res.sendFile(path.join(__dirname,'games/clean.html'));
 });
 
 //set up route for giving tamogotchi affection
-app.get('/love.html', (req,res) => {
-  res.sendFile(path.join(__dirname,'games/test.html'));
+app.get('/attention', (req,res) => {
+  res.sendFile(path.join(__dirname,'games/love.html'));
 });
-
-app.get('/sketch.js', (req,res) => {
-  res.sendFile(path.join(__dirname,'games/sketch.js'));
-});
-
-
 
 //Set up the routes to handle the stats of the tamogotchi
 app.get('/display', (req, res) => { 

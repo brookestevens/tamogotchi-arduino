@@ -1,9 +1,10 @@
 /////////////////////////////////////
 //
-//  testing serial communication
-//  when the user presses a button, signal is sent to p5
-//  p5 returns a random number of lights to be lit up
-//  
+//  Sets up RFID reader for identifying which game to play
+//  Upon identifying card, p5 activates games and user enters infinite loop
+//  Loop is able to read buttons pressed, and only breaks when game is beaten
+//  p5 returns number of lights to be lit for the status bars
+//  clear the buffer after every read so it doesnt mess up button readings
 //
 ////////////////////////////////////
 
@@ -15,14 +16,14 @@ SoftwareSerial rSerial(2, 3); // RX, TX
 
 //set up the neopixels
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(8, 9, NEO_GRB + NEO_KHZ800);
-//Adafruit_NeoPixel strip2 = Adafruit_NeoPixel(8, 10, NEO_GRB + NEO_KHZ800);
-//Adafruit_NeoPixel strip3 = Adafruit_NeoPixel(8, 11, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip2 = Adafruit_NeoPixel(8, 10, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip3 = Adafruit_NeoPixel(8, 11, NEO_GRB + NEO_KHZ800);
 
 //BUTTON CONSTANTS
 const int buttonPinRight = 7;
 const int buttonPinLeft = 4;
-//const int buttonPinUp = 13;
-//const int buttonPinDown = 12;
+const int buttonPinUp = 13;
+const int buttonPinDown = 12;
 const int buttonPinSelect = 8;
 
 // For SparkFun's tags, we will receive 16 bytes on every
@@ -34,13 +35,14 @@ const int buttonPinSelect = 8;
 // plus the total number of tags we want to check against (kTags)
 const int tagLen = 16;
 const int idLen = 13;
-const int kTags = 2;
+const int kTags = 3;
 
 // Put your known tags here!
 char knownTags[kTags][idLen] = {
              "2B009F8D0D34",
              "290068F8D069",
-};
+             "2B009FE8277B",
+};            
 
 // Empty array to hold a freshly scanned tag
 char newTag[idLen];
@@ -58,8 +60,12 @@ void lightPixels(int numLights){
     r = 0; b = 0; g = 255; //green
   }
   for(int i = 0; i< numLights; i++){
-    strip.setPixelColor(i,r,g,b);
+    strip.setPixelColor(i,0,255,0);
     strip.show();
+    strip2.setPixelColor(i,0,255,0);
+    strip2.show();
+    strip3.setPixelColor(i,0,255,0);
+    strip3.show();
   }
 }
 
@@ -67,6 +73,10 @@ void turnOffPixels(){
   for(int i = 0; i< 8; i++){
     strip.setPixelColor(i,0,0,0);
     strip.show();
+    strip2.setPixelColor(i,0,0,0);
+    strip2.show();
+    strip3.setPixelColor(i,0,0,0);
+    strip3.show();
   }
 }
 
@@ -113,12 +123,15 @@ void loop() {
 
   //initialize the neopixels
   //Data to update the neopixels come as 3 digit number in a string ex) '123'
-  //can then break up number by place values then send each place value to respective 
-  //neopixel LED
+  //100s place is hunger, 10s place is cleanliness, 1s place is happiness
   
   if(Serial.available() > 0){
     String inString = Serial.readStringUntil('\r\n');
-    float hungerMeter = floor(inString.toInt()/100); //get the hundreds place digit
+    float hungerMeter = floor(inString.toInt()/100); //get the 100s place digit for the hunger meter
+    float hygeineMeter = floor(inString.toInt()/10); //get the 10s place digit for the hunger meter
+    float happinessMeter = floor(inString.toInt()/100); //get the 1s place digit for the hunger meter
+    lightPixels(int(hungerMeter)); //cast as int 
+    lightPixels(int(hungerMeter)); //cast as int 
     lightPixels(int(hungerMeter)); //cast as int 
     Serial.flush();
   }
@@ -162,18 +175,26 @@ void loop() {
       Serial.println(newTag);
       Serial.flush(); 
         while(1){ //loop forever to record all button inputs for the games
-          int buttonStateLeft = digitalRead(buttonPinLeft);
-          int buttonStateRight = digitalRead(buttonPinRight);
-          int buttonStateSelect = digitalRead(buttonPinSelect);
-          if( buttonStateLeft == HIGH){
+          //int buttonStateLeft = digitalRead(buttonPinLeft);
+          //int buttonStateRight = digitalRead(buttonPinRight);
+          //int buttonStateSelect = digitalRead(buttonPinSelect);
+          if(digitalRead(buttonPinLeft) == HIGH){
             Serial.write(3);
             delay(1);
           }
-          if(buttonStateRight == HIGH){
+          if(digitalRead(buttonPinRight) == HIGH){
             Serial.write(4);
             delay(1);
           }
-          if(buttonStateSelect == HIGH){
+//          if(digitalRead(buttonPinUp) == HIGH){
+//            Serial.write(1);
+//            delay(1);
+//          }
+//          if(digitalRead(buttonPinDown) == HIGH){
+//            Serial.write(2);
+//            delay(1);
+//          }
+          if(digitalRead(buttonPinSelect) == HIGH){
             Serial.write(5);
             delay(1);
           }
