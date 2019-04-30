@@ -1,6 +1,7 @@
 //////////////////////////////////////
 //
-//  Breakout game for feeding the tamogotchi
+//  Breakout game from p5 gmae library examples
+//  Modified to wrok with serial port and DB
 //  updates the DB upon completion of game  
 //  redirects back to the home page
 //
@@ -14,10 +15,8 @@
   var BRICK_MARGIN = 4;
   var ROWS = 1;
   var COLUMNS = 10;
-  var gameOver;
   var score = 0;
   var hunger = 0; //stores the initial DB call
-  var flag = true;
   var begin = false;
   var gameRestart = false ; //these flags are necessary so the program doesnt loop too many times
 
@@ -39,7 +38,7 @@
   function serialEvent(){
     inData = +serial.read(); //convert to a number
     //console.log(inData);
-    if(inData === 5 && begin == false){ //start game after half a second
+    if(inData === 1 && begin == false){ //start game after half a second
       begin = true;
       if(gameRestart === true){ //restart the game if failed
         location.reload();
@@ -50,13 +49,13 @@
         }, 1000); 
       }  
     }
-    if( inData === 3){ //LEFT BUTTON
-      if (paddle.position.x >= 70){
+    if( inData === 2){ //LEFT BUTTON
+      if (paddle.position.x >= 10){
         paddle.position.x -= 1;
       }
     }
-    if( inData === 4){ //RIGHT BUTTON
-      if (paddle.position.x <= 430){
+    if( inData === 5){ //RIGHT BUTTON
+      if (paddle.position.x <= 470){
         paddle.position.x += 1;
       }
     }
@@ -121,7 +120,7 @@
     background(131, 134, 247);
     textSize(20);
     text('Score: ' + score, 50, 50);
-    text('Press Select to start Game', 200, 50);
+    text('Press black button to start Game', 200, 50);
     //paddle.position.x = constrain(LEFT_ARROW, paddle.width/2, width-paddle.width/2);
 
 
@@ -143,27 +142,25 @@
     if(ball.position.y >= 490){
      gameOver();
    }
-   //make sure this only makes 1 QUERY!!!! NO LOOPING -- will be true upon page reload/redirect
-   if(score >= 7){
-     if(flag == true) gameWin();
-     flag = false;
+   //noLoop breaks the draw loop -- dont want to query DB more than once
+   if(score >= 6){
+      noLoop();
+      gameWin();
+   }
   }
 
-
-  }
   function gameOver(){
     ball.setSpeed(0); 
     textSize(30);
     textAlign(CENTER);
     text('Gameover', 250, 250);
-    text("Try again? Press select to retry. ", 250, 300);
+    text("Try again? Press black button to retry. ", 250, 300);
     gameRestart = true;
     begin = false;
   }
 
   function gameWin() {
     ball.setSpeed(0); 
-    //delay this message for a second...flag stops it from looping > 1
     setTimeout(function(){
       textSize(30);
       textAlign(CENTER);

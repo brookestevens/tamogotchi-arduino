@@ -1,8 +1,10 @@
 /////////////////////////////////////////////////
 //
+//  REQUIRED EXPRESS MODULES:
 //  Express - define the routes
 //  pg-promise - make database calls
-//  Running on port 8080 so the p5 serial port can connect to it
+//  path - serve up static files and directories
+//  Arduino serial listens on port 8081 - app listens on port 8000
 //
 ////////////////////////////////////////////////
 
@@ -20,14 +22,21 @@ const dbConfig = {
 	password: 'postgres' //Password
 };
 
+var stats = {
+  food: '',
+  love: '',
+  hygiene: ''
+}
+
 var db = pgp(dbConfig);
 
 //Serve up the directories
-app.use(express.static(__dirname + '/public'));
+app.use('/public', express.static(__dirname + '/public'));
 app.use('/games', express.static(__dirname + '/games'));
 
-app.get('/p5.play.js', (req,res) => {
-  res.sendFile(path.join(__dirname,'/p5.play.js'));
+//set up home page
+app.get('/', (req,res) => {
+  res.sendFile(path.join(__dirname,'public/index.html'));
 });
 
 //set up route for feeding the tamogotchi
@@ -49,9 +58,10 @@ app.get('/attention', (req,res) => {
 app.get('/display', (req, res) => { 
 db.any('SELECT * FROM stats WHERE id=2;')
   .then( data => {
-    res.send({
-      info : data[0]
-    })
+    stats.love = data[0].love;
+    stats.hygiene = data[0].hygiene;
+    stats.food = data[0].food;
+    res.send({info : data[0]})
   })
   .catch(e => console.log(e))
 });
@@ -71,5 +81,17 @@ app.get('/update', (req, res) => {
   })
   res.send({"express": "success"}) //send this success message back
 })
+
+//decrease the stats every 5 min
+// var count = 0;
+// setInterval(function(){
+//   console.log("working: ", count++);
+//   stats.food ? --stats.food : ++stats.food;
+//   stats.love ? --stats.love : ++stats.love;
+//   stats.hygiene ? --stats.hygiene : ++stats.hygiene;
+//   console.log(`${stats.food} and ${stats.love} and ${stats.hygiene}`);
+//   db.any(`UPDATE stats SET food = ${stats.food}, love = ${stats.love}, hygiene = ${stats.hygiene} WHERE id = 2`)
+//   .catch(e => console.log(e))
+// },60000);
 
 app.listen(port, () => console.log(`App is listening on port ${port}!`));

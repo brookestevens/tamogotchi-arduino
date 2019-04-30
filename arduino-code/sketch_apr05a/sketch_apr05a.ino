@@ -1,12 +1,12 @@
-/////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
 //
 //  Sets up RFID reader for identifying which game to play
 //  Upon identifying card, p5 activates games and user enters infinite loop
 //  Loop is able to read buttons pressed, and only breaks when game is beaten
-//  p5 returns number of lights to be lit for the status bars
-//  clear the buffer after every read so it doesnt mess up button readings
+//  p5 returns number of lights to be lit for the status bars and breaks the while loop
+//  clear the buffer after every read so it doesn't mess up button readings
 //
-////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
 
 #include <Adafruit_NeoPixel.h>
 #include <SoftwareSerial.h>
@@ -15,13 +15,13 @@
 SoftwareSerial rSerial(2, 3); // RX, TX
 
 //set up the neopixels
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(8, 9, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip1 = Adafruit_NeoPixel(8, 9, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel strip2 = Adafruit_NeoPixel(8, 10, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel strip3 = Adafruit_NeoPixel(8, 11, NEO_GRB + NEO_KHZ800);
 
 //BUTTON CONSTANTS
 const int buttonPinRight = 7;
-const int buttonPinLeft = 4;
+const int buttonPinLeft = 6;
 const int buttonPinUp = 13;
 const int buttonPinDown = 12;
 const int buttonPinSelect = 8;
@@ -39,40 +39,44 @@ const int kTags = 3;
 
 // Put your known tags here!
 char knownTags[kTags][idLen] = {
-             "2B009F8D0D34",
-             "290068F8D069",
-             "2B009FE8277B",
+             "2B009F8D0D34", //love
+             "2B009FE8277B", //food
+             "2B009FD7395A", //clean
 };            
 
 // Empty array to hold a freshly scanned tag
 char newTag[idLen];
 
 //change the lights based on how "cared for" the tamogotchi is
-void lightPixels(int numLights){
-  int r,g,b;
-  if(numLights <= 2){
-    r = 255; g = 0; b = 0; //red---thats bad
-  }
-  else if(numLights >= 3 && numLights <= 6 ){
-    r = 186; g = 209; b = 35; //yellow color
-  }
-  else{
-    r = 0; b = 0; g = 255; //green
-  }
+
+int lightHunger(int numLights){
   for(int i = 0; i< numLights; i++){
-    strip.setPixelColor(i,0,255,0);
-    strip.show();
+    strip1.setPixelColor(i,0,255,0);
+    strip1.show();
+  }
+  return 0;
+}
+
+int lightHygiene(int numLights){
+  for(int i = 0; i< numLights; i++){
     strip2.setPixelColor(i,0,255,0);
     strip2.show();
+  }
+  return 0;
+}
+
+int lightLove(int numLights){
+  for(int i = 0; i< numLights; i++){
     strip3.setPixelColor(i,0,255,0);
     strip3.show();
   }
+  return 0;
 }
 
-void turnOffPixels(){
-  for(int i = 0; i< 8; i++){
-    strip.setPixelColor(i,0,0,0);
-    strip.show();
+void turnOffLights(){
+    for(int i = 0; i< 8; i++){
+    strip1.setPixelColor(i,0,0,0);
+    strip1.show();
     strip2.setPixelColor(i,0,0,0);
     strip2.show();
     strip3.setPixelColor(i,0,0,0);
@@ -97,23 +101,22 @@ void setup() {
   Serial.begin(9600);
   rSerial.begin(9600);
   //Initiate the neopixels
-  strip.begin();
-  strip.setBrightness(40);
-  strip.show();
+  strip1.begin();
+  strip1.show();
+  strip2.begin();
+  strip2.show();
+  strip3.begin();
+  strip3.show();
   //start the buttons
   pinMode(buttonPinLeft, INPUT);
   pinMode(buttonPinRight, INPUT);
   pinMode(buttonPinSelect, INPUT);
+  pinMode(buttonPinUp, INPUT);
+  pinMode(buttonPinDown, INPUT);
 }
 
 void loop() {
   //Serial Communication for the buttons: Each button has a unique number that will be sent out
-  //up: 1
-  //down: 2
-  //right: 3
-  //left: 4
-  //select: 5
-
   // Counter for the newTag array
   int i = 0;
   // Variable to hold each byte read from the serial buffer
@@ -127,12 +130,14 @@ void loop() {
   
   if(Serial.available() > 0){
     String inString = Serial.readStringUntil('\r\n');
-    float hungerMeter = floor(inString.toInt()/100); //get the 100s place digit for the hunger meter
-    float hygeineMeter = floor(inString.toInt()/10); //get the 10s place digit for the hunger meter
-    float happinessMeter = floor(inString.toInt()/100); //get the 1s place digit for the hunger meter
-    lightPixels(int(hungerMeter)); //cast as int 
-    lightPixels(int(hungerMeter)); //cast as int 
-    lightPixels(int(hungerMeter)); //cast as int 
+    int num = inString.toInt();
+    if (num == 0) turnOffLights();
+    float hungerMeter = floor(num/100);        //get the 100s place digit
+    float hygieneMeter = floor((num%100)/10);  //get the 10s place digit 
+    float happinessMeter = num%10;             //get the 1s place digit 
+    lightHunger(int(hungerMeter));
+    lightHygiene(int(hygieneMeter));
+    lightLove(int(happinessMeter));
     Serial.flush();
   }
 
@@ -175,9 +180,6 @@ void loop() {
       Serial.println(newTag);
       Serial.flush(); 
         while(1){ //loop forever to record all button inputs for the games
-          //int buttonStateLeft = digitalRead(buttonPinLeft);
-          //int buttonStateRight = digitalRead(buttonPinRight);
-          //int buttonStateSelect = digitalRead(buttonPinSelect);
           if(digitalRead(buttonPinLeft) == HIGH){
             Serial.write(3);
             delay(1);
@@ -186,19 +188,21 @@ void loop() {
             Serial.write(4);
             delay(1);
           }
-//          if(digitalRead(buttonPinUp) == HIGH){
-//            Serial.write(1);
-//            delay(1);
-//          }
-//          if(digitalRead(buttonPinDown) == HIGH){
-//            Serial.write(2);
-//            delay(1);
-//          }
+          if(digitalRead(buttonPinUp) == HIGH){
+            Serial.write(1);
+            delay(1);
+          }
+          if(digitalRead(buttonPinDown) == HIGH){
+            Serial.write(2);
+            delay(1);
+          }
           if(digitalRead(buttonPinSelect) == HIGH){
             Serial.write(5);
             delay(1);
           }
-          if(Serial.available() > 0){ //wait for this signal specifically from p5 upon game completion
+          //break out of the loop once player finishes game
+          //signal is sent from p5
+          if(Serial.available() > 0){ 
             char inData = Serial.read();
             if(inData == 'b') break;   
           }
